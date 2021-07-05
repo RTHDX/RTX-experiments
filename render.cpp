@@ -9,8 +9,8 @@ Point Ray::at(float n) const {
     return origin + n * direction;
 }
 
-Sphere::Sphere(Point center, float radius)
-    : IOBject()
+Sphere::Sphere(Point center, float radius, Color color)
+    : IOBject(std::move(color))
     , _center(std::move(center))
     , _radius(radius)
 {}
@@ -27,6 +27,8 @@ Hit Sphere::hit(const Ray& ray) const {
     Hit hit(true);
     hit.t_near = tca - thc;
     hit.t_far = tca + thc;
+    hit.point = ray.at(hit.t_near);
+    hit.normal = glm::normalize(hit.point - _center);
     return hit;
 }
 
@@ -64,7 +66,7 @@ float Camera::x_axis_direction(int x) const {
 }
 
 float Camera::y_axis_direction(int y) const {
-    return -(pixel_screen_y(y) * tanf(_field_of_view / 2));
+    return (pixel_screen_y(y) * tanf(_field_of_view / 2));
 }
 
 float Camera::z_axis_direction() const { return -1.0f; }
@@ -78,8 +80,7 @@ std::vector<Color> Render::render() const {
     std::vector<Color> frame(_scene.width * _scene.height);
     for (size_t i = 0; i < _scene.height; ++i) {
         for (size_t j = 0; j < _scene.width; ++j) {
-            Color color = trace(_camera.emit_ray(i, j));
-            frame[i * _scene.width + j] = color;
+            frame[i * _scene.width + j] = trace(_camera.emit_ray(i, j));
         }
     }
     return frame;
@@ -89,7 +90,7 @@ Color Render::trace(const Ray& ray) const {
     for (const auto& object : _scene.objects) {
         Hit hit = object->hit(ray);
         if (hit.is_hitted) {
-            return Color(0.0, 1.0, 0.0);
+            return object->color();
         }
     }
     return _scene.background;

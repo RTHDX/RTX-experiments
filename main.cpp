@@ -12,7 +12,12 @@ constexpr int HEIGHT = 640;
 render::Scene create_scene(int width, int height) {
     render::Scene scene;
     scene.objects = {
-        std::make_shared<render::Sphere>(render::Point(0.0f, 0.0f, 0.0f), 3.0f)
+        std::make_shared<render::Sphere>(render::Point(0.0f, 0.0f, 0.0f), 3.0f,
+                                         render::Color(1.0f, 0.0f, 0.0f)),
+        std::make_shared<render::Sphere>(render::Point(0.0f, 5.0f, -12.0f), 10.0f,
+                                         render::Color(0.0f, 1.0f, 0.0f)),
+        std::make_shared<render::Sphere>(render::Point(0.0f, -100000.0f, 0.0f), 100000.0f,
+                                         render::Color(0.6f, 0.75f, 0.6f)),
     };
     scene.background = render::Color(0.8, 0.85, 0.8);
     scene.width = width;

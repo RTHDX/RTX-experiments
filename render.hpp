@@ -19,6 +19,8 @@ struct Hit {
     float t_near;
     float t_far;
     bool  is_hitted;
+    Point point;
+    Vector normal;
 
 public:
     Hit(bool is_hitted)
@@ -40,21 +42,22 @@ public:
 
 class IOBject {
 public:
-    IOBject() = default;
-    IOBject(const IOBject&) = default;
-    IOBject& operator = (const IOBject&) = default;
-    IOBject(IOBject&&) = default;
-    IOBject& operator = (IOBject&&) = default;
+    IOBject(Color color) : _color(std::move(color)) {}
     virtual ~IOBject() = default;
 
+    const Color& color() const { return _color; }
+
     virtual Hit hit(const Ray& ray) const = 0;
+
+private:
+    Color _color;
 };
 using Objects = std::vector<std::shared_ptr<IOBject>>;
 
 
 class Sphere : public IOBject {
 public:
-    Sphere(Point center, float radius);
+    Sphere(Point center, float radius, Color color);
 
     Hit hit(const Ray& ray) const override;
 
