@@ -5,12 +5,44 @@
 
 namespace render {
 
+Material::Material(Color color, Albedo albedo)
+    : color(std::move(color))
+    , albedo(std::move(albedo))
+{}
+
+Light::Light(Point position, float intensity)
+    : position(std::move(position))
+    , intensity(intensity)
+{}
+
+Vector Light::direction(const Point& point) const {
+    return glm::normalize(position - point);
+}
+
+float Light::diffuce_factor(const Point& point, const Vector& normal) const {
+    float dot = glm::dot(direction(point), normal);
+    return intensity * std::max(0.0f, dot);
+}
+
+float Light::specular_factor(const Point& point, const Vector& normal, float exp) const {
+    return -1.0f;
+}
+
+Hit::Hit(bool is_hitted)
+    : is_hitted(is_hitted)
+    , t_near(std::numeric_limits<float>::max())
+    , t_far(std::numeric_limits<float>::max())
+    , point(1.0f, 1.0f, 1.0f)
+    , normal(1.0f, 1.0f, 1.0f)
+    , material()
+{}
+
 Point Ray::at(float n) const {
     return origin + n * direction;
 }
 
-Sphere::Sphere(Point center, float radius, Color color)
-    : IOBject(std::move(color))
+Sphere::Sphere(Point center, float radius, Material material)
+    : IOBject(std::move(material))
     , _center(std::move(center))
     , _radius(radius)
 {}
@@ -29,10 +61,11 @@ Hit Sphere::hit(const Ray& ray) const {
     hit.t_far = tca + thc;
     hit.point = ray.at(hit.t_near);
     hit.normal = glm::normalize(hit.point - _center);
+    hit.material = material();
     return hit;
 }
 
-Camera::Camera(glm::vec3 position, float field_of_view, int width, int height)
+Camera::Camera(Point position, float field_of_view, int width, int height)
     : _position(std::move(position))
     , _field_of_view(field_of_view)
     , _aspect_ratio(float(width) / float(height))
@@ -87,13 +120,26 @@ std::vector<Color> Render::render() const {
 }
 
 Color Render::trace(const Ray& ray) const {
-    for (const auto& object : _scene.objects) {
-        Hit hit = object->hit(ray);
-        if (hit.is_hitted) {
-            return object->color();
-        }
+    Hit hit = intersects(ray);
+    if (!hit.is_hitted) { return _scene.background; }
+    
+    float diffuse_light_intensity = 0.0f;
+    for (const Light& light : _scene.lights) {
+        diffuse_light_intensity += light.diffuce_factor(hit.point, hit.normal);
     }
-    return _scene.background;
+
+    const Albedo& albedo = hit.material.albedo;
+    Color diffuse = hit.material.color * diffuse_light_intensity * albedo.x;
+    return diffuse;
+}
+
+Hit Render::intersects(const Ray& ray) const {
+    Hit hit(false);
+    for (const auto& objects : _scene.objects) {
+        hit = objects->hit(ray);
+        if (hit.is_hitted) { return hit; }
+    }
+    return hit;
 }
 
 }

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdlib.h>
 
+#include "glm/glm/gtc/type_ptr.hpp"
+
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
@@ -88,5 +90,8 @@ float* covert(const std::vector<render::Color>& frame) {
     return buffer;
 }
 
+inline float* fast_convert(std::vector<render::Color>& frame) {
+    return glm::value_ptr(*frame.data());
+}
 
 }

@@ -10,9 +10,33 @@
 
 namespace render {
 
-using Point = glm::vec3;
-using Color = glm::vec3;
+using Point  = glm::vec3;
+using Color  = glm::vec3;
+using Albedo = glm::vec3;
 using Vector = glm::vec3;
+
+
+struct Material {
+    Color color;
+    Albedo albedo;
+
+public:
+    Material() = default;
+    Material(Color color, Albedo albedo);
+};
+
+struct Light {
+    Point position;
+    float intensity;
+
+public:
+    Light(Point position, float intensity);
+
+    Vector direction(const Point& point) const;
+    float diffuce_factor(const Point& point, const Vector& normal) const;
+    float specular_factor(const Point& point, const Vector& normal, float exp) const;
+};
+using Lights = std::vector<Light>;
 
 
 struct Hit {
@@ -21,13 +45,10 @@ struct Hit {
     bool  is_hitted;
     Point point;
     Vector normal;
+    Material material;
 
 public:
-    Hit(bool is_hitted)
-        : is_hitted(is_hitted)
-        , t_near(std::numeric_limits<float>::max())
-        , t_far(std::numeric_limits<float>::max())
-    {}
+    Hit(bool is_hitted);
 };
 
 struct Ray {
@@ -42,22 +63,24 @@ public:
 
 class IOBject {
 public:
-    IOBject(Color color) : _color(std::move(color)) {}
+    IOBject(Material material)
+        : _material(std::move(material))
+    {}
     virtual ~IOBject() = default;
 
-    const Color& color() const { return _color; }
+    const Material& material() const { return _material; }
 
     virtual Hit hit(const Ray& ray) const = 0;
 
 private:
-    Color _color;
+    Material _material;
 };
 using Objects = std::vector<std::shared_ptr<IOBject>>;
 
 
 class Sphere : public IOBject {
 public:
-    Sphere(Point center, float radius, Color color);
+    Sphere(Point center, float radius, Material material);
 
     Hit hit(const Ray& ray) const override;
 
@@ -97,6 +120,7 @@ private:
 struct Scene {
     Objects objects;
     Color background;
+    Lights lights;
     size_t width;
     size_t height;
 };
@@ -110,6 +134,7 @@ public:
 
 private:
     Color trace(const Ray& ray) const;
+    Hit intersects(const Ray& ray) const;
 
 private:
     Scene _scene;
