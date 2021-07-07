@@ -19,10 +19,11 @@ using Vector = glm::vec3;
 struct Material {
     Color color;
     Albedo albedo;
+    float specular_exponent;
 
 public:
     Material() = default;
-    Material(Color color, Albedo albedo);
+    Material(Color color, Albedo albedo, float specular_exponent);
 };
 
 struct Light {

@@ -8,24 +8,30 @@ constexpr int WIDTH = 860;
 constexpr int HEIGHT = 640;
 
 render::Objects create_objects() {
-    render::Material red(render::Color(0.9, 0.0, 0.0), render::Albedo(0.3, 0.5, 0.5));
-    render::Material green(render::Color(0.0, 0.9, 0.0), render::Albedo(0.3, 0.5, 0.5));
-    render::Material blue(render::Color(0.0, 0.0, 0.9), render::Albedo(0.95, 0.5, 0.5));
+    render::Material red(render::Color(0.9, 0.0, 0.0),
+                         render::Albedo(0.04, 0.3, 0.5), 59.0f);
+
+    render::Material green(render::Color(0.0, 0.9, 0.0),
+                           render::Albedo(0.05, 0.1, 0.5), 40.0f);
+
+    render::Material ground(render::Color(0.3, 0.3, 0.3),
+                            render::Albedo(0.01, 0.01, 0.5), 10.0f);
 
     return {
-        std::make_shared<render::Sphere>(render::Point(0.0f, 0.0f, 0.0f), 3.0f,
+        std::make_shared<render::Sphere>(render::Point(0.0f, 0.0f, 1.0f), 3.0f,
                                          red),
         std::make_shared<render::Sphere>(render::Point(0.0f, 5.0f, -12.0f), 10.0f,
                                          green),
         std::make_shared<render::Sphere>(render::Point(0.0f, -100000.0f, 0.0f), 100000.0f,
-                                         blue),
+                                         ground),
     };
 }
 
 render::Lights create_lights() {
     return {
-        render::Light(render::Point(40.0f, 40.0f, 40.0f), 2.0f),
-        render::Light(render::Point(-40.0f, 40.0f, 40.0f), 2.0f)
+        render::Light(render::Point(0.0f, 100.0f, 5.0f), 30.0f),
+        render::Light(render::Point(40.0f, 40.0f, 50.0f), 5.0f),
+        render::Light(render::Point(-40.0f, 40.0f, 50.0f), 5.0f)
     };
 }
 

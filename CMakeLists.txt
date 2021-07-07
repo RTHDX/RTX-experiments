@@ -13,3 +13,6 @@ add_subdirectory(glm)
 
 add_executable(${PROJECT_NAME} main.cpp render.hpp render.cpp utils.hpp)
 target_link_libraries(${PROJECT_NAME} GLAD ${OPENGL_LIBRARIES} glfw)
+
+add_executable("${PROJECT_NAME}-Test" test.cpp render.hpp render.cpp utils.hpp)
+target_link_libraries("${PROJECT_NAME}-Test" GLAD ${OPENGL_LIBRARIES} glfw)

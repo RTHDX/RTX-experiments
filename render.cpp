@@ -5,9 +5,14 @@
 
 namespace render {
 
-Material::Material(Color color, Albedo albedo)
+static inline Vector reflect(const Vector& income, const Vector& normal) {
+    return income - normal * 2.f * (income * normal);
+}
+
+Material::Material(Color color, Albedo albedo, float specular_exponent)
     : color(std::move(color))
     , albedo(std::move(albedo))
+    , specular_exponent(specular_exponent)
 {}
 
 Light::Light(Point position, float intensity)
@@ -25,7 +30,9 @@ float Light::diffuce_factor(const Point& point, const Vector& normal) const {
 }
 
 float Light::specular_factor(const Point& point, const Vector& normal, float exp) const {
-    return -1.0f;
+    //Vector ref = -reflect(-direction(point), normal);
+    float dot = glm::dot(normal, direction(point));
+    return powf(std::max(0.0f, dot), exp) * intensity;
 }
 
 Hit::Hit(bool is_hitted)
@@ -122,15 +129,22 @@ std::vector<Color> Render::render() const {
 Color Render::trace(const Ray& ray) const {
     Hit hit = intersects(ray);
     if (!hit.is_hitted) { return _scene.background; }
-    
-    float diffuse_light_intensity = 0.0f;
+
+    float diffuse_light_intensity = 0.0f,
+          specular_light_intensity = 0.0f;
     for (const Light& light : _scene.lights) {
-        diffuse_light_intensity += light.diffuce_factor(hit.point, hit.normal);
+        const auto& point = hit.point;
+        const auto& normal = hit.normal;
+        float exponent = hit.material.specular_exponent;
+        diffuse_light_intensity += light.diffuce_factor(point, normal);
+        specular_light_intensity += light.specular_factor(point, normal, exponent);
     }
 
     const Albedo& albedo = hit.material.albedo;
     Color diffuse = hit.material.color * diffuse_light_intensity * albedo.x;
-    return diffuse;
+    Color specular = Color(1.0f, 1.0f, 1.0f) * specular_light_intensity * albedo.y;
+    Color total = diffuse + specular;
+    return total;
 }
 
 Hit Render::intersects(const Ray& ray) const {
