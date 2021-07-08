@@ -39,7 +39,7 @@ public:
 };
 using Lights = std::vector<Light>;
 
-
+class IObject;
 struct Hit {
     float t_near;
     float t_far;
@@ -47,6 +47,7 @@ struct Hit {
     Point point;
     Vector normal;
     Material material;
+    IObject* object {nullptr};
 
 public:
     Hit(bool is_hitted);
@@ -62,28 +63,29 @@ public:
 };
 
 
-class IOBject {
+class IObject {
 public:
-    IOBject(Material material)
+    IObject(Material material)
         : _material(std::move(material))
     {}
-    virtual ~IOBject() = default;
+    virtual ~IObject() = default;
 
     const Material& material() const { return _material; }
 
-    virtual Hit hit(const Ray& ray) const = 0;
+    virtual Hit hit(const Ray& ray) = 0;
 
 private:
     Material _material;
 };
-using Objects = std::vector<std::shared_ptr<IOBject>>;
+using Object = std::shared_ptr<IObject>;
+using Objects = std::vector<Object>;
 
 
-class Sphere : public IOBject {
+class Sphere : public IObject {
 public:
     Sphere(Point center, float radius, Material material);
 
-    Hit hit(const Ray& ray) const override;
+    Hit hit(const Ray& ray) override;
 
 private:
     Point _center;
@@ -136,6 +138,7 @@ public:
 private:
     Color trace(const Ray& ray) const;
     Hit intersects(const Ray& ray) const;
+    bool is_shaded(const Ray& ray, IObject* current) const;
 
 private:
     Scene _scene;

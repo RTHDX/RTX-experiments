@@ -49,12 +49,12 @@ Point Ray::at(float n) const {
 }
 
 Sphere::Sphere(Point center, float radius, Material material)
-    : IOBject(std::move(material))
+    : IObject(std::move(material))
     , _center(std::move(center))
     , _radius(radius)
 {}
 
-Hit Sphere::hit(const Ray& ray) const {
+Hit Sphere::hit(const Ray& ray) {
     Vector origin_to_center = _center - ray.origin;
     float tca = glm::dot(origin_to_center, ray.direction);
     if (tca < 0) { return Hit(false); } // ray direction mismatches
@@ -69,6 +69,7 @@ Hit Sphere::hit(const Ray& ray) const {
     hit.point = ray.at(hit.t_near);
     hit.normal = glm::normalize(hit.point - _center);
     hit.material = material();
+    hit.object = this;
     return hit;
 }
 
@@ -136,6 +137,12 @@ Color Render::trace(const Ray& ray) const {
         const auto& point = hit.point;
         const auto& normal = hit.normal;
         float exponent = hit.material.specular_exponent;
+        Ray shadow_ray;
+        shadow_ray.origin = light.position;
+        shadow_ray.direction = light.direction(point);
+        if (is_shaded(shadow_ray, hit.object)) {
+            return Color(0.0, 0.0, 0.0);
+        }
         diffuse_light_intensity += light.diffuce_factor(point, normal);
         specular_light_intensity += light.specular_factor(point, normal, exponent);
     }
@@ -149,11 +156,22 @@ Color Render::trace(const Ray& ray) const {
 
 Hit Render::intersects(const Ray& ray) const {
     Hit hit(false);
-    for (const auto& objects : _scene.objects) {
-        hit = objects->hit(ray);
+    for (const auto& object : _scene.objects) {
+        hit = object->hit(ray);
         if (hit.is_hitted) { return hit; }
     }
     return hit;
+}
+
+bool Render::is_shaded(const Ray& shadow_ray, IObject* current) const {
+    for (const Object& object : _scene.objects) {
+        if (object.get() == current) continue;
+        Hit hit = object->hit(shadow_ray);
+        if (hit.is_hitted) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }
