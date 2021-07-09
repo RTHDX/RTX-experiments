@@ -16,6 +16,10 @@
 
 namespace utils {
 
+static constexpr render::Color BLACK(0.0f, 0.0f, 0.0f);
+static constexpr render::Color WHITE(1.0f, 1.0f, 1.0f);
+static constexpr render::Color RED(1.0f, 0.0f, 0.0f);
+
 inline void fill_frame(float* buffer, size_t size, float r, float g, float b) {
     for (size_t i = 0; i < size; i += 3) {
         buffer[i] = r;
@@ -62,12 +66,12 @@ inline void load_opengl() {
     printf(" - profile mask %d\n", profile_mask);
 }
 
-void post_processing() {
+inline void post_processing() {
     printf("At exit");
     glfwTerminate();
 }
 
-void draw(int width, int height, float* frame) {
+inline void draw(int width, int height, float* frame) {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawPixels(width, height, GL_RGB, GL_FLOAT, frame);
@@ -77,7 +81,7 @@ inline float to_radian(float degree) {
     return degree * float(M_PI / 180);
 }
 
-float* covert(const std::vector<render::Color>& frame) {
+inline float* covert(const std::vector<render::Color>& frame) {
     const size_t len = frame.size() * 3;
     float* buffer = new float[len];
     size_t idx = 0;
@@ -93,5 +97,10 @@ float* covert(const std::vector<render::Color>& frame) {
 inline float* fast_convert(std::vector<render::Color>& frame) {
     return glm::value_ptr(*frame.data());
 }
+
+struct MaterialConstructor {
+public:
+    
+};
 
 }

@@ -4,8 +4,9 @@
 #include <memory>
 #include <array>
 #include <limits>
+#include <ostream>
 
-#include "glm/glm/glm.hpp"
+#include <glm.hpp>
 
 
 namespace render {
@@ -46,12 +47,13 @@ struct Hit {
     bool  is_hitted;
     Point point;
     Vector normal;
-    Material material;
     IObject* object {nullptr};
 
 public:
     Hit(bool is_hitted);
 };
+
+std::ostream& operator << (std::ostream& os, const Hit&);
 
 struct Ray {
 public:
@@ -59,8 +61,11 @@ public:
     Vector direction;
 
 public:
+    Ray(Point origin, Vector direction);
+
     Point at(float n) const;
 };
+std::ostream& operator << (std::ostream& out, const Ray& ray);
 
 
 class IObject {
@@ -121,6 +126,9 @@ private:
 };
 
 struct Scene {
+    static constexpr float BIAS = 1e-4;
+    static constexpr int MAX_DEPTH = 50;
+
     Objects objects;
     Color background;
     Lights lights;
@@ -134,9 +142,7 @@ public:
     ~Render() = default;
 
     std::vector<Color> render() const;
-
-private:
-    Color trace(const Ray& ray) const;
+    Color trace(const Ray& ray, int depth) const;
     Hit intersects(const Ray& ray) const;
     bool is_shaded(const Ray& ray, IObject* current) const;
 

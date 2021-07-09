@@ -11,8 +11,17 @@ add_subdirectory(glfw)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/glm/glm")
 add_subdirectory(glm)
 
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest/include")
+add_subdirectory(googletest)
+enable_testing()
+
 add_executable(${PROJECT_NAME} main.cpp render.hpp render.cpp utils.hpp)
 target_link_libraries(${PROJECT_NAME} GLAD ${OPENGL_LIBRARIES} glfw)
 
-add_executable("${PROJECT_NAME}-Test" test.cpp render.hpp render.cpp utils.hpp)
-target_link_libraries("${PROJECT_NAME}-Test" GLAD ${OPENGL_LIBRARIES} glfw)
+add_executable("${PROJECT_NAME}-Test" test.hpp test.cpp render.hpp render.cpp utils.hpp)
+target_link_libraries("${PROJECT_NAME}-Test"
+	GLAD ${OPENGL_LIBRARIES} glfw GTest::gtest GTest::gtest_main GTest::gmock
+	GTest::gmock_main
+)
+
+
