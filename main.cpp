@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "render.hpp"
+#include "Render.hpp"
 #include "utils.hpp"
 
 constexpr int WIDTH = 860;
@@ -45,13 +45,13 @@ Objects create_objects() {
     };
 }
 
-const Point camera_location(0.0f, 0.0f, 120.0f);
+const Point camera_location(0.0f, 0.0f, 100.0f);
 
 render::Lights create_lights() {
     return {
-        Light(Point(0.0f, 50.0f, 0.0f), 25.0f),
-        Light(Point(45.0f, 50.0f, 45.0f), 5.0f),
-        Light(Point(-45.0f, 40.0f, 45.0f), 5.0f),
+        Light(Point(0.0f, 50.0f, 0.0f), 15.0f),
+        Light(Point(45.0f, 50.0f, 45.0f), 10.0f),
+        Light(Point(-45.0f, 40.0f, 45.0f), 10.0f),
     };
 }
 
@@ -69,8 +69,8 @@ Camera create_camera(int widht, int height) {
     return Camera(camera_location, to_radian(60), widht, height);
 }
 
-Render create_render(int width, int height) {
-    return Render(
+NativeRender create_render(int width, int height) {
+    return NativeRender(
         create_scene(width, height),
         create_camera(width, height)
     );

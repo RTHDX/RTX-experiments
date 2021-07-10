@@ -1,3 +1,4 @@
+cmake_minimum_required (VERSION 3.18)
 project(OPENGL_CUDA LANGUAGES CXX CUDA)
 
 find_package(OpenGL REQUIRED)
@@ -15,13 +16,17 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest/include")
 add_subdirectory(googletest)
 enable_testing()
 
-add_executable(${PROJECT_NAME} main.cpp render.hpp render.cpp utils.hpp)
-target_link_libraries(${PROJECT_NAME} GLAD ${OPENGL_LIBRARIES} glfw)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/renderer")
+add_subdirectory(renderer)
 
-add_executable("${PROJECT_NAME}-Test" test.hpp test.cpp render.hpp render.cpp utils.hpp)
+
+add_executable(${PROJECT_NAME} main.cpp)
+target_link_libraries(${PROJECT_NAME} GLAD ${OPENGL_LIBRARIES} glfw renderer)
+
+add_executable("${PROJECT_NAME}-Test" test.hpp test.cpp)
 target_link_libraries("${PROJECT_NAME}-Test"
 	GLAD ${OPENGL_LIBRARIES} glfw GTest::gtest GTest::gtest_main GTest::gmock
-	GTest::gmock_main
+	GTest::gmock_main renderer
 )
 
 
