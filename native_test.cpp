@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "utils.hpp"
-#include "test.hpp"
+#include "native_test.hpp"
 
 using namespace utils;
 using namespace render;
@@ -19,7 +19,7 @@ static inline Scene make_scene(int width = DEFAULT_DIM,
         std::make_shared<Sphere>(Point(0.0, -100005.0, 0.0), 100000.0,
                                  material_2)
     };
-    scene.background = utils::BLACK;
+    scene.background = Color(0.0, 0.0, 0.0);
     scene.height = height;
     scene.width = width;
     scene.lights = {
@@ -33,9 +33,9 @@ Camera make_camera(int widht = DEFAULT_DIM, int height = DEFAULT_DIM) {
                   widht, height);
 }
 
-Render make_render(int width = DEFAULT_DIM, int height = DEFAULT_DIM) {
-    return Render(make_scene(width, height),
-                  make_camera(width, height));
+NativeRender make_render(int width = DEFAULT_DIM, int height = DEFAULT_DIM) {
+    return NativeRender(make_scene(width, height),
+                        make_camera(width, height));
 }
 
 
@@ -56,10 +56,10 @@ TEST_F(ShadowTest, light_direction) {
 TEST_F(ShadowTest, hit_info) {
     Ray ray = camera.emit_ray(DEFAULT_DIM / 2, DEFAULT_DIM / 2);
     Hit hit_1 = scene.objects[0]->hit(ray);
-    EXPECT_TRUE(hit_1.is_hitted);
+    EXPECT_TRUE(hit_1.is_hitted());
     std::cout << hit_1 << std::endl;
     Hit hit_2 = scene.objects[1]->hit(ray);
-    EXPECT_FALSE(hit_2.is_hitted);
+    EXPECT_FALSE(hit_2.is_hitted());
 }
 
 TEST_F(ShadowTest, shadow_ray) {
@@ -81,11 +81,11 @@ int main(int argc, char** argv) {
     const int height = 300;
     GLFWwindow* main_window = load_glfw("TEST", width, height);
     load_opengl();
-    Render render = make_render(width, height);
-    auto frame = render.render();
+    NativeRender render = make_render(width, height);
+    render.render();
     while (!glfwWindowShouldClose(main_window)) {
         glfwSwapBuffers(main_window);
-        draw(width, height, fast_convert(frame));
+        render.draw();
         glfwPollEvents();
     }
 

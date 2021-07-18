@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render.hpp"
+#include "NativeRender.hpp"
 
 
 class ShadowTest : public testing::Test {
@@ -10,5 +10,5 @@ public:
 public:
     render::Scene scene;
     render::Camera camera;
-    render::Render render;
+    render::NativeRender render;
 };

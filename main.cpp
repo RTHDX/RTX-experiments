@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Render.hpp"
-#include "utils.hpp"
+#include "NativeRender.hpp"
+#include "Utils.hpp"
 
 constexpr int WIDTH = 860;
 constexpr int HEIGHT = 640;
@@ -27,6 +27,9 @@ Objects create_objects() {
     Material mint(Color(0.1, 0.95, 0.65),
                   Albedo(0.3, 0.1, 0.01), 80.0f);
 
+    Material mirror(Color(0.01f, 0.0f, 0.0f),
+                    Albedo(0.01, 0.0f, 1.0f), 20.0f);
+
     return {
         std::make_shared<Sphere>(Point(40.0f, 0.0f, 40.0f), 5.0f,
                                  red),
@@ -37,7 +40,7 @@ Objects create_objects() {
         std::make_shared<Sphere>(Point(25.0, 10.0f, 0.0f), 10.0f,
                                  white),
         std::make_shared<Sphere>(Point(-25.0, 10.0f, 0.0f), 10.0f,
-                                 white),
+                                 mirror),
         std::make_shared<Sphere>(Point(0.0f, 10.0f, -50.0f), 40.0f,
                                  mint),
         std::make_shared<Sphere>(Point(0.0f, -10000005.0f, 0.0f),
@@ -84,11 +87,10 @@ int main(int argc, char** argv) {
     load_opengl();
 
     auto renderer = create_render(WIDTH, HEIGHT);
-    std::vector<Color> frame = renderer.render();
-
+    renderer.render();
     while (!glfwWindowShouldClose(main_window)) {
         glfwSwapBuffers(main_window);
-        draw(WIDTH, HEIGHT, fast_convert(frame));
+        renderer.draw();
         glfwPollEvents();
     }
 
