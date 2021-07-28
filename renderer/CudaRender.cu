@@ -38,6 +38,16 @@ ATTRIBS Hit intersects(const Context* ctx, const Ray& ray) {
 }
 
 
+ATTRIBS bool is_shaded(const Context* ctx, const Ray& ray, const Sphere* sphere) {
+    const auto& objects = ctx->scene->objects();
+    for (size_t i = 0; i < objects.len; ++i) {
+        if (sphere == &objects.list[i]) { continue; }
+        if (objects.list[i].hit(ray).is_hitted()) { return true; }
+    }
+    return false;
+}
+
+
 ATTRIBS Color trace(const Context* ctx, const Ray& ray) {
     Hit hit = intersects(ctx, ray);
     if (!hit.is_hitted()) { return ctx->scene->background(); }
@@ -49,6 +59,11 @@ ATTRIBS Color trace(const Context* ctx, const Ray& ray) {
         const auto& point = hit.point;
         const auto& normal = hit.normal;
         float exponent = hit.object->material().specular_exponent;
+
+        Ray shadow_ray(point + normal * ctx->scene->bias(),
+                       -lights.list[i].direction(point));
+        if (is_shaded(ctx, shadow_ray, hit.object)) { continue; }
+
         diffuse_light_intensity += lights.list[i].diffuce_factor(point, normal);
         specular_light_intensity += lights.list[i]
             .specular_factor(point, normal, exponent);

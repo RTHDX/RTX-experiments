@@ -21,8 +21,8 @@ static inline std::vector<Sphere> make_spheres() {
 
 static inline std::vector<Light> make_lights() {
     return {
-        //Light(Point(40.0f, 40.0f, 30.0f), 5.0f),
-        Light(Point(-40.0f, 40.0f, 30.0f), 5.0f),
+        Light(Point(40.0f, 40.0f, 30.0f), 3.0f),
+        Light(Point(-40.0f, 40.0f, 30.0f), 3.0f),
     };
 }
 
@@ -35,7 +35,7 @@ static inline Scene make_scene(int width = DEFAULT_DIM, int height = DEFAULT_DIM
 }
 
 inline Camera make_camera(int widht = DEFAULT_DIM, int height = DEFAULT_DIM) {
-    return Camera(Point(0.0, 0.0, 30.0), to_radian(45),
+    return Camera(Point(0.0, 0.0, 50.0), to_radian(45),
                   widht, height);
 }
 
