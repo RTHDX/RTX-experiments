@@ -36,18 +36,11 @@ int main(int argc, char** argv) {
     atexit(post_processing);
     const int width = 860;
     const int height = 640;
-/*
-    dim3 block(width);
-    dim3 thread(height);
-    cudaDeviceSynchronize();
-    kernel<<<block, thread>>>(width * height);
-    cudaDeviceSynchronize();
-*/
+
     GLFWwindow* window = load_glfw("cuda raytracer", width, height);
     load_opengl();
 
     CudaRender render = make_render(width, height);
-    //render.render();
     while (!glfwWindowShouldClose(window)) {
         render.render();
         glfwSwapBuffers(window);

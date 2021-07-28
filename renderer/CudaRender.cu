@@ -7,7 +7,6 @@
 #include <gtx/string_cast.hpp>
 #include <gtc/type_ptr.hpp>
 
-//#include "Utils.hpp"
 #include "CudaRender.cuh"
 
 
@@ -41,11 +40,27 @@ ATTRIBS Hit intersects(const Context* ctx, const Ray& ray) {
 
 ATTRIBS Color trace(const Context* ctx, const Ray& ray) {
     Hit hit = intersects(ctx, ray);
-    if (hit.is_hitted()) {
-        return hit.object->material().color;
-    } else {
-        return ctx->scene->background();
+    if (!hit.is_hitted()) { return ctx->scene->background(); }
+
+    float diffuse_light_intensity = 0.0f,
+          specular_light_intensity = 0.0f;
+    const auto& lights = ctx->scene->lights();
+    for (size_t i = 0; i < lights.len; ++i) {
+        const auto& point = hit.point;
+        const auto& normal = hit.normal;
+        float exponent = hit.object->material().specular_exponent;
+        diffuse_light_intensity += lights.list[i].diffuce_factor(point, normal);
+        specular_light_intensity += lights.list[i]
+            .specular_factor(point, normal, exponent);
     }
+
+    const Albedo& albedo = hit.object->material().albedo;
+    Color diffuse = hit.object->material().color * diffuse_light_intensity *
+                    albedo.x;
+    Color specular = Color(1.0, 1.0, 1.0) * specular_light_intensity *
+                     albedo.y;
+    Color total = diffuse + specular;
+    return total;
 }
 
 __global__ void kernel_render(const Context* ctx, size_t len, Color* frame) {

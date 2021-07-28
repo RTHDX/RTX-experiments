@@ -9,27 +9,27 @@ using namespace render::cuda;
 
 constexpr int DEFAULT_DIM = 20;
 
-
 static inline std::vector<Sphere> make_spheres() {
-    Material material_1(Color(1.0, 1.0, 1.0), Albedo(0.1, 0.1, 0.1), 20.0);
-    Material material_2(Color(0.9, 0.9, 0.9), Albedo(0.1, 0.1, 0.1), 30.0);
+    Material material_1(Color(1.0, 0.1, 0.1), Albedo(0.7, 0.09, 0.1), 40.0);
+    Material material_2(Color(0.9, 0.9, 0.9), Albedo(0.5, 0.1, 0.1), 30.0);
 
     return {
         Sphere(Point(0.0, 0.0, 0.0), 2.0f, material_1),
-        //Sphere(Point(0.0, -100005.0, 0.0), 100000.0, material_2)
+        Sphere(Point(0.0, -100005.0, 0.0), 100000.0, material_2)
     };
 }
 
 static inline std::vector<Light> make_lights() {
     return {
-        Light(Point(0.0, 40.0, 0.0), 10.0f),
+        //Light(Point(40.0f, 40.0f, 30.0f), 5.0f),
+        Light(Point(-40.0f, 40.0f, 30.0f), 5.0f),
     };
 }
 
 
 static inline Scene make_scene(int width = DEFAULT_DIM, int height = DEFAULT_DIM) {
     return Scene(
-        make_spheres(), Color(0.1, 0.1, 0.1), make_lights(),
+        make_spheres(), Color(0.1, 0.01, 0.01), make_lights(),
         width, height
     );
 }
