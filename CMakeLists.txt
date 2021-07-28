@@ -58,16 +58,16 @@ create_executable(
 
 create_executable(
     TARGET "Native-Test"
-    SOURCES native_test.cpp
-    HEADERS native_test.hpp
+    SOURCES NativeTest.cpp
+    HEADERS NativeTest.hpp
     LIBS GTest::gtest GTest::gtest_main GTest::gmock
          GTest::gmock_main renderer
 )
 
 create_executable(
     TARGET "Cuda-Test"
-    SOURCES cuda_test.cu
-    HEADERS cuda_test.cuh
+    SOURCES CudaTest.cu
+    HEADERS CudaTest.cuh
     LIBS GTest::gtest GTest::gtest_main GTest::gmock
          GTest::gmock_main renderer
 )

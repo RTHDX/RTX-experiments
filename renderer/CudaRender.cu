@@ -1,55 +1,115 @@
 #include <stdio.h>
 
+#include <glad/glad.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <gtx/string_cast.hpp>
+#include <gtc/type_ptr.hpp>
 
-#include "Utils.hpp"
+//#include "Utils.hpp"
 #include "CudaRender.cuh"
 
 
 namespace render { namespace cuda {
 
-Hit::Hit(IObject* object) : object(object) {}
 
-
-Scene::Scene(Objects object, Color background, Lights lights, size_t w, size_t h)
-    : _objects(std::move(object))
+Scene::Scene(const std::vector<Sphere>& objects, Color background,
+             const std::vector<Light>& lights, size_t w, size_t h)
+    : _objects(utils::cuda::convert_to_cuda_managed(objects))
     , _background(std::move(background))
-    , _lights(std::move(lights))
+    , _lights(utils::cuda::convert_to_cuda_managed(lights))
     , _width(w)
     , _height(h)
-{
-    printf("Objects.size: %zd, Background: %s, Lights.size: %zd, %zdx%zd\n",
-           _objects.size(), glm::to_string(_background).c_str(),
-           _lights.size(), _width, _height);
-}
-
-__global__ void kernel_render(CudaRender* render) {
-    assert(render);
-
-    printf("*******************DEVICE*******************************\n");
-    printf("Camera.width: %d, Camera.height: %d\n",
-           render->camera().width(),
-           render->camera().height());
-    printf("Scene.objects.size: %d", render->scene().background().x);
-}
-
-CudaRender::CudaRender(Scene scene, Camera camera, int width, int height)
-    : BaseRender()
-    , _scene(std::move(scene))
-    , _camera(std::move(camera))
-    , _len(width * height)
-    , _frame(new Color[_len])
-    , _cuda_frame_ptr(utils::cuda::cuda_allocate(_cuda_frame_ptr, _len))
 {}
 
+
+ATTRIBS Hit intersects(const Context* ctx, const Ray& ray) {
+    Hit hit(false);
+    float distance = utils::cuda::positive_infinite();
+    const auto& objects = ctx->scene->objects();
+    for (size_t index = 0; index < objects.len; ++index) {
+        Hit temp = objects.list[index].hit(ray);
+        if (temp.is_hitted() && distance > temp.t_near) {
+            hit = temp;
+            distance = temp.t_near;
+        }
+    }
+    return hit;
+}
+
+
+ATTRIBS Color trace(const Context* ctx, const Ray& ray) {
+    Hit hit = intersects(ctx, ray);
+    if (hit.is_hitted()) {
+        return hit.object->material().color;
+    } else {
+        return ctx->scene->background();
+    }
+}
+
+__global__ void kernel_render(const Context* ctx, size_t len, Color* frame) {
+    const int w_pos = blockIdx.x;
+    const int h_pos = threadIdx.x;
+    const int width = gridDim.x;
+    const int index = w_pos + (width * h_pos);
+
+    if (index >= len) return;
+    if (ctx == nullptr) return;
+    if (ctx->camera == nullptr || ctx->scene == nullptr) return;
+
+    Color pixel_color = trace(ctx, ctx->camera->emit_ray(h_pos, w_pos));
+
+    frame[index].r = pixel_color.r;
+    frame[index].g = pixel_color.g;
+    frame[index].b = pixel_color.b;
+}
+
+
+CudaRender::CudaRender(const Scene& scene, const Camera& camera, int width, int height)
+    : BaseRender()
+    , _scene(utils::cuda::cuda_copy(_scene, scene))
+    , _camera(utils::cuda::cuda_copy(_camera, camera))
+    , _width(width)
+    , _height(height)
+    , _len(width * height)
+    , _frame(new Color[_len])
+    , _cuda_frame_ptr(utils::cuda::cuda_allocate_buffer(_cuda_frame_ptr, _len))
+{}
+
+CudaRender::~CudaRender() {
+    cudaFree(_scene->objects().list);
+    cudaFree(_scene->lights().list);
+    cudaFree(_scene);
+    cudaFree(_camera);
+    cudaFree(_cuda_frame_ptr);
+    delete [] _frame;
+}
+
 void CudaRender::render() {
-    _dev_ptr = utils::cuda::cuda_copy(_dev_ptr, *this);
-    dim3 block(1);
-    dim3 thread(1);
-    kernel_render<<<block, thread>>>(_dev_ptr);
+    dim3 block(_width);
+    dim3 thread(_height);
+    Context* dev_ctx;
+    HANDLE_ERROR(cudaMallocManaged(&dev_ctx, sizeof (Context)));
+    dev_ctx->camera = _camera;
+    dev_ctx->scene = _scene;
+    kernel_render<<<block, thread>>>(dev_ctx, _len, _cuda_frame_ptr);
+    cudaFree(dev_ctx);
+}
+
+
+float* CudaRender::frame() {
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaMemcpy(_frame, _cuda_frame_ptr, _len * sizeof (Color),
+                            cudaMemcpyDeviceToHost));
+    cudaDeviceSynchronize();
+    return glm::value_ptr(*_frame);
+}
+
+void CudaRender::draw() {
+    BaseRender::draw();
+    glDrawPixels(_width, _height, GL_RGB, GL_FLOAT,
+                 frame());
 }
 
 }}

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "utils.hpp"
-#include "native_test.hpp"
+#include "NativeTest.hpp"
 
 using namespace utils;
 using namespace render;
