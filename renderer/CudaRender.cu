@@ -48,9 +48,15 @@ ATTRIBS bool is_shaded(const Context* ctx, const Ray& ray, const Sphere* sphere)
 }
 
 
-ATTRIBS Color trace(const Context* ctx, const Ray& ray) {
+ATTRIBS Color trace(const Context* ctx, const Ray& ray, int depth) {
+    if (depth == ctx->scene->max_depth()) { return ctx->scene->background(); }
+
     Hit hit = intersects(ctx, ray);
     if (!hit.is_hitted()) { return ctx->scene->background(); }
+
+    Ray reflect_ray(hit.point + hit.normal * ctx->scene->bias(),
+                    utils::cuda::reflect(ray.direction, hit.normal));
+    Color reflection_color = trace(ctx, reflect_ray, depth + 1);
 
     float diffuse_light_intensity = 0.0f,
           specular_light_intensity = 0.0f;
@@ -74,7 +80,8 @@ ATTRIBS Color trace(const Context* ctx, const Ray& ray) {
                     albedo.x;
     Color specular = Color(1.0, 1.0, 1.0) * specular_light_intensity *
                      albedo.y;
-    Color total = diffuse + specular;
+    Color reflection = reflection_color * albedo.z;
+    Color total = diffuse + specular + reflection;
     return total;
 }
 
@@ -88,7 +95,7 @@ __global__ void kernel_render(const Context* ctx, size_t len, Color* frame) {
     if (ctx == nullptr) return;
     if (ctx->camera == nullptr || ctx->scene == nullptr) return;
 
-    Color pixel_color = trace(ctx, ctx->camera->emit_ray(h_pos, w_pos));
+    Color pixel_color = trace(ctx, ctx->camera->emit_ray(h_pos, w_pos), 0);
 
     frame[index].r = pixel_color.r;
     frame[index].g = pixel_color.g;

@@ -195,7 +195,7 @@ public:
     __host__ __device__ size_t width() const { return _width; }
     __host__ __device__ size_t height() const { return _height; }
     __host__ __device__ float bias() const { return 1e-4; }
-    __host__ __device__ float max_depth() const { return 5; }
+    __host__ __device__ float max_depth() const { return 7; }
 
 public:
     utils::cuda::Collection<Sphere> _objects;
@@ -232,7 +232,7 @@ struct Context {
 
 __global__ void kernel_render(const Context* ctx, size_t len, Color* frame);
 ATTRIBS Hit intersects(const Context* ctx, const Ray& ray);
-ATTRIBS Color trace(const Context* ctx, const Ray& ray);
+ATTRIBS Color trace(const Context* ctx, const Ray& ray, int depth);
 ATTRIBS bool is_shaded(const Context* ctx, const Ray& ray,
                        const Sphere* sphere);
 
