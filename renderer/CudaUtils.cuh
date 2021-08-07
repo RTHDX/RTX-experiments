@@ -2,12 +2,14 @@
 
 #include <vector>
 
+#include <glm.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
 
 #define ATTRIBS __device__
+#define __ATTRIBS__ __host__ __device__
 
 
 namespace utils { namespace cuda {
@@ -92,15 +94,15 @@ Collection<T> convert_to_cuda_managed(const std::vector<T>& values) {
 }
 
 
-template<typename T> ATTRIBS inline T max(T lhs, T rhs) {
+template<typename T> __host__ __device__ inline T max(T lhs, T rhs) {
     return lhs > rhs ? lhs : rhs;
 }
 
-ATTRIBS inline glm::vec3 reflect(const glm::vec3& income, const glm::vec3& normal) {
+__host__ __device__ inline glm::vec3 reflect(const glm::vec3& income, const glm::vec3& normal) {
     return income - normal * 2.f * glm::dot(income, normal) * normal;
 }
 
-ATTRIBS inline float positive_infinite() {
+__host__ __device__ inline float positive_infinite() {
     return 3.402823466e+38F;
 }
 

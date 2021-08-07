@@ -13,8 +13,10 @@
 namespace render { namespace cuda {
 
 
-Scene::Scene(const std::vector<Sphere>& objects, Color background,
-             const std::vector<Light>& lights, size_t w, size_t h)
+__ATTRIBS__ Scene::Scene(const std::vector<Sphere>& objects,
+                         Color background,
+                         const std::vector<Light>& lights,
+                         size_t w, size_t h)
     : _objects(utils::cuda::convert_to_cuda_managed(objects))
     , _background(std::move(background))
     , _lights(utils::cuda::convert_to_cuda_managed(lights))
@@ -23,22 +25,22 @@ Scene::Scene(const std::vector<Sphere>& objects, Color background,
 {}
 
 
-ATTRIBS Hit intersects(const Context* ctx, const Ray& ray) {
+__ATTRIBS__ Hit intersects(const Context* ctx, const Ray& ray) {
     Hit hit(false);
     float distance = utils::cuda::positive_infinite();
     const auto& objects = ctx->scene->objects();
     for (size_t index = 0; index < objects.len; ++index) {
         Hit temp = objects.list[index].hit(ray);
-        if (temp.is_hitted() && distance > temp.t_near) {
+        if (temp.is_hitted() && distance > temp.t_near()) {
             hit = temp;
-            distance = temp.t_near;
+            distance = temp.t_near();
         }
     }
     return hit;
 }
 
 
-ATTRIBS bool is_shaded(const Context* ctx, const Ray& ray, const Sphere* sphere) {
+__ATTRIBS__ bool is_shaded(const Context* ctx, const Ray& ray, const Sphere* sphere) {
     const auto& objects = ctx->scene->objects();
     for (size_t i = 0; i < objects.len; ++i) {
         if (sphere == &objects.list[i]) { continue; }
@@ -48,35 +50,35 @@ ATTRIBS bool is_shaded(const Context* ctx, const Ray& ray, const Sphere* sphere)
 }
 
 
-ATTRIBS Color trace(const Context* ctx, const Ray& ray, int depth) {
+__ATTRIBS__ Color trace(const Context* ctx, const Ray& ray, int depth) {
     if (depth == ctx->scene->max_depth()) { return ctx->scene->background(); }
 
     Hit hit = intersects(ctx, ray);
     if (!hit.is_hitted()) { return ctx->scene->background(); }
 
-    Ray reflect_ray(hit.point + hit.normal * ctx->scene->bias(),
-                    utils::cuda::reflect(ray.direction, hit.normal));
+    Ray reflect_ray(hit.point() + hit.normal() * ctx->scene->bias(),
+                    utils::cuda::reflect(ray.direction, hit.normal()));
     Color reflection_color = trace(ctx, reflect_ray, depth + 1);
 
     float diffuse_light_intensity = 0.0f,
           specular_light_intensity = 0.0f;
     const auto& lights = ctx->scene->lights();
     for (size_t i = 0; i < lights.len; ++i) {
-        const auto& point = hit.point;
-        const auto& normal = hit.normal;
-        float exponent = hit.object->material().specular_exponent;
+        const auto& point = hit.point();
+        const auto& normal = hit.normal();
+        float exponent = hit.object()->material().specular_exponent;
 
         Ray shadow_ray(point + normal * ctx->scene->bias(),
                        -lights.list[i].direction(point));
-        if (is_shaded(ctx, shadow_ray, hit.object)) { continue; }
+        if (is_shaded(ctx, shadow_ray, hit.object())) { continue; }
 
         diffuse_light_intensity += lights.list[i].diffuce_factor(point, normal);
         specular_light_intensity += lights.list[i]
             .specular_factor(point, normal, exponent);
     }
 
-    const Albedo& albedo = hit.object->material().albedo;
-    Color diffuse = hit.object->material().color * diffuse_light_intensity *
+    const Albedo& albedo = hit.object()->material().albedo;
+    Color diffuse = hit.object()->material().color * diffuse_light_intensity *
                     albedo.x;
     Color specular = Color(1.0, 1.0, 1.0) * specular_light_intensity *
                      albedo.y;
@@ -95,7 +97,7 @@ __global__ void kernel_render(const Context* ctx, size_t len, Color* frame) {
     if (ctx == nullptr) return;
     if (ctx->camera == nullptr || ctx->scene == nullptr) return;
 
-    Color pixel_color = trace(ctx, ctx->camera->emit_ray(h_pos, w_pos), 0);
+    Color pixel_color = trace(ctx, ctx->camera->emit_world_ray(h_pos, w_pos), 0);
 
     frame[index].r = pixel_color.r;
     frame[index].g = pixel_color.g;

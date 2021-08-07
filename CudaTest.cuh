@@ -54,3 +54,10 @@ inline CudaRender make_render(int width = DEFAULT_DIM, int height = DEFAULT_DIM)
     );
 }
 
+
+class CameraTest : public testing::Test {
+public:
+    CameraTest();
+
+    render::cuda::Camera _camera;
+};
