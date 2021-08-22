@@ -8,7 +8,6 @@
 #include <device_launch_parameters.h>
 
 
-#define ATTRIBS __device__
 #define __ATTRIBS__ __host__ __device__
 
 

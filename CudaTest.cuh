@@ -42,7 +42,7 @@ static inline Scene make_scene(int width = DEFAULT_DIM, int height = DEFAULT_DIM
 }
 
 inline Camera make_camera(int widht = DEFAULT_DIM, int height = DEFAULT_DIM) {
-    return Camera(Point(0.0, 0.0, 50.0), to_radian(45),
+    return Camera(Point(0.0, 0.0, 50.0), Point(0.0, 0.0, 0.0), to_radian(45),
                   widht, height);
 }
 
@@ -57,6 +57,13 @@ inline CudaRender make_render(int width = DEFAULT_DIM, int height = DEFAULT_DIM)
 
 class CameraTest : public testing::Test {
 public:
+    static Point z_positive;
+    static Point z_negative;
+    static Point x_positive;
+    static Point x_negative;
+    static Point y_positive;
+    static Point y_negative;
+
     CameraTest();
 
     render::cuda::Camera _camera;

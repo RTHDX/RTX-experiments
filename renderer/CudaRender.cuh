@@ -72,39 +72,36 @@ public:
 class Camera {
 public:
     __ATTRIBS__ inline Camera() = default;
-    __ATTRIBS__ Camera(Point position, float field_of_view, int width, int height);
+    __ATTRIBS__ Camera(Point position,
+                       Point look_at,
+                       float field_of_view,
+                       int width, int height);
 
     __ATTRIBS__ const Point& position() const;
     __ATTRIBS__ int width() const;
     __ATTRIBS__ int height() const;
     __ATTRIBS__ Ray emit_ray(int height_pos, int width_pos) const;
-    __ATTRIBS__ Ray emit_world_ray(int height_pos, int width_pos) const;
 
-    __ATTRIBS__ void move_forward() { _z_step -= _speed; }
-    __ATTRIBS__ void move_backward() { _z_step += _speed; }
-    __ATTRIBS__ void move_right() { _x_step += _speed; }
-    __ATTRIBS__ void move_left() { _x_step -= _speed; }
-    __ATTRIBS__ void move_up() { _y_step += _speed; }
-    __ATTRIBS__ void move_down() { _y_step -= _speed; }
+    __ATTRIBS__ void move_forward();
+    __ATTRIBS__ void move_backward();
+    __ATTRIBS__ void move_right();
+    __ATTRIBS__ void move_left();
+    __ATTRIBS__ void move_up();
+    __ATTRIBS__ void move_down();
 
-private:
-    __ATTRIBS__ float pixel_ndc_x(int pos) const;
-    __ATTRIBS__ float pixel_ndc_y(int pos) const;
-    __ATTRIBS__ float pixel_screen_x(int x) const;
-    __ATTRIBS__ float pixel_screen_y(int y) const;
-    __ATTRIBS__ float x_axis_direction(int x) const;
-    __ATTRIBS__ float y_axis_direction(int y) const;
-    __ATTRIBS__ float z_axis_direction() const;
-    __ATTRIBS__ glm::mat4x4 view() const;
-    __ATTRIBS__ glm::mat4x4 projection() const;
+    __ATTRIBS__ void update_position(const Point& point);
+
+    __ATTRIBS__ void dump() const;
 
 private:
-    Point _position;
+    __ATTRIBS__ glm::mat3x3 cam_to_world() const;
+
+private:
+    Point _position, _look_at;
     float _field_of_view, _aspect_ratio;
     int _width, _height;
 
-    float _x_step = 0.0, _y_step = 0.0, _z_step = 0.0;
-    float _speed = 0.1;
+    float _speed = 0.5;
 };
 
 
@@ -117,8 +114,7 @@ class Hit {
     Sphere*  _object {nullptr};
 
 public:
-    __ATTRIBS__ Hit() = default;
-    __ATTRIBS__ Hit(Sphere* object) : _object(object) {}
+    __ATTRIBS__ Hit(Sphere* object = nullptr) : _object(object) {}
     __ATTRIBS__ bool is_hitted() const { return _object != nullptr; }
 
     __ATTRIBS__ float t_near() const { return _t_near; }

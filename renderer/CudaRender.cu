@@ -97,7 +97,7 @@ __global__ void kernel_render(const Context* ctx, size_t len, Color* frame) {
     if (ctx == nullptr) return;
     if (ctx->camera == nullptr || ctx->scene == nullptr) return;
 
-    Color pixel_color = trace(ctx, ctx->camera->emit_world_ray(h_pos, w_pos), 0);
+    Color pixel_color = trace(ctx, ctx->camera->emit_ray(h_pos, w_pos), 0);
 
     frame[index].r = pixel_color.r;
     frame[index].g = pixel_color.g;
